@@ -398,7 +398,7 @@ Time : {datetime.now(tz=ist_timezone).strftime('%d-%m-%Y  ⏰: %I:%M:%S %p')}
             return
         except:
             pass
-        return await message.reply('Nᴏ sᴜᴄʜ ғɪʟᴇ ᴇxɪsᴛ.')
+        # return await message.reply('Nᴏ sᴜᴄʜ ғɪʟᴇ ᴇxɪsᴛ.')
     files = files_[0]
     title = files.file_name
     size=get_size(files.file_size)
