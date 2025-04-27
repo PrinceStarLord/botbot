@@ -1,0 +1,17 @@
+pyrotgfork[fast]
+pymongo
+motor
+marshmallow==3.14.1
+umongo
+requests
+bs4
+git+https://github.com/Joelkb/cinemagoer
+datetime
+pytz
+aiohttp
+python-dotenv
+aiofiles
+dnspython
+psutil
+Flask
+gunicorn
