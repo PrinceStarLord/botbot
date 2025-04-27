@@ -145,9 +145,9 @@ NAME <b>: {}</b>
 
 MESSAGE <b>: {}</b>"""
 
-    CAPTION = """<b>{file_name}</b>"""
+    CAPTION = """<b>{file_caption}</b>"""
 
-    BCAPTION = """<b>{file_name}"""
+    BCAPTION = """<b>{file_caption}"""
 
     IMDB_TEMPLATE_TXT = """
 <b>Query:</b> {query}\n‌\n🏷 <b>Title :</b> <a href={url}>{title}</a>\n🎭 <b>Genres :</b> {genres}\n📆 <b>Year :</b> <ahref={url}/releaseinfo>{year}</a>\n🌟 <b>Rating :</b> <a href={url}/ratings>{rating}</a>\n📀 <b>RunTime :</b> {runtime} Minutes\n📆 <b>Release Info :</b> {release_date}\n\n<b>❤️‍🔥 Requested By :</b> {message.from_user.mention}"""
