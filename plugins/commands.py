@@ -93,7 +93,12 @@ async def start(client, message):
             await sts.delete()
             return await message.reply_text("<b>Invalid DSTORE Link ❌</b>")
 
-        async for msg in client.iter_messages(int(f_chat_id), int(l_msg_id), int(f_msg_id)):
+        async for msg in client.iter_messages(
+            int(f_chat_id),
+            min_id=int(f_msg_id)-1, 
+            max_id=int(l_msg_id)
+        ):
+
             if msg.media:
                 media = getattr(msg, msg.media.value)
                 f_caption = getattr(msg, 'caption', '') or ''
