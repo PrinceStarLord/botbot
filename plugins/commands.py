@@ -13,6 +13,7 @@ from utils import get_settings, get_size, is_subscribed, save_group_settings, te
 from database.connections_mdb import active_connection
 import re
 import json
+import binascii
 import base64
 logger = logging.getLogger(__name__)
 
@@ -202,18 +203,26 @@ async def start(client, message):
             await asyncio.sleep(1)
         return await sts.delete()
 
-    # Fallback for normal file download
+
+
     files_ = await get_file_details(file_id)
     if not files_:
-        pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("utf-8")).split("_", 1)
+        try:
+        # Try safe decoding
+            decoded_data = base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))
+            decoded_string = decoded_data.decode("utf-8")
+            pre, file_id = decoded_string.split("_", 1)
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+        # If decode fails => Not a valid encoded file, just return gracefully
+            return await message.reply_text("<b>Invalid Link or File not found ❌</b>")
+    
         try:
             if IS_VERIFY and not await check_verification(client, message.from_user.id):
-                btn = [[
-                    InlineKeyboardButton("Vᴇʀɪғʏ", url=await get_token(client, message.from_user.id, f"https://telegram.me/{temp.U_NAME}?start=", file_id)),
-                    InlineKeyboardButton("Hᴏᴡ Tᴏ Vᴇʀɪғʏ", url=HOW_TO_VERIFY)
-                ],[
-                    InlineKeyboardButton("⭐️ Bᴜʏ Pʀᴇᴍɪᴜᴍ ⭐️", url=UPDATES)
-                ]]
+                btn = [
+                    [InlineKeyboardButton("Vᴇʀɪғʏ", url=await get_token(client, message.from_user.id, f"https://telegram.me/{temp.U_NAME}?start=", file_id)),
+                    InlineKeyboardButton("Hᴏᴡ Tᴏ Vᴇʀɪғʏ", url=HOW_TO_VERIFY)],
+                    [InlineKeyboardButton("⭐️ Bᴜʏ Pʀᴇᴍɪᴜᴍ ⭐️", url=UPDATES)]
+                ]
                 await message.reply_text(
                     text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!</b>",
                     protect_content=True if PROTECT_CONTENT else False,
@@ -244,6 +253,7 @@ async def start(client, message):
         except:
             pass
         return
+
 
     files = files_[0]
     title = files.file_name
