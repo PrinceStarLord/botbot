@@ -52,73 +52,77 @@ async def start(client, message):
         )
         return
 
+    data = message.command[1]
+
     if AUTH_CHANNEL and not await is_subscribed(client, message):
         try:
             invite_link = await client.create_chat_invite_link(int(AUTH_CHANNEL))
         except ChatAdminRequired:
-            logger.error("Mᴀᴋᴇ sᴜʀᴇ Bᴏᴛ ɪs ᴀᴅᴍɪɴ ɪɴ Fᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ")
+            logger.error("Bot must be admin in ForceSub Channel")
             return
 
-        btn = [[InlineKeyboardButton("❆ Jᴏɪɴ Oᴜʀ Bᴀᴄᴋ-Uᴘ Cʜᴀɴɴᴇʟ ❆", url=invite_link.invite_link)]]
-        if message.command[1] != "subscribe":
-            try:
-                kk, file_id = message.command[1].split("_", 1)
-                pre = 'checksubp' if kk == 'filep' else 'checksub'
-                btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ", callback_data=f"{pre}#{file_id}")])
-            except (IndexError, ValueError):
-                btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ", url=f"https://t.me/{temp.U_NAME}?start={message.command[1]}")])
-
+        btn = [[InlineKeyboardButton("❆ Join Our Backup Channel ❆", url=invite_link.invite_link)]]
         await client.send_message(
             chat_id=message.from_user.id,
-            text="**Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ɪɴ ᴏᴜʀ Bᴀᴄᴋ-ᴜᴘ ᴄʜᴀɴɴᴇʟ. Pʟᴇᴀsᴇ ᴊᴏɪɴ ғɪʀsᴛ!**",
+            text="**You are not in our Backup Channel. Please join first!**",
             reply_markup=InlineKeyboardMarkup(btn),
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return
 
-    data = message.command[1]
-
     if data.startswith("DS-"):
-        # Handling DSTORE links
-        sts = await message.reply("<b>Please wait...</b>")
+        # 🛠 DSTORE Handling
+        sts = await message.reply("<b>Please wait while fetching your batch...</b>")
         b_string = data.split("-", 1)[1]
         try:
             decoded = (base64.urlsafe_b64decode(b_string + "=" * (-len(b_string) % 4))).decode("utf-8")
             try:
                 f_msg_id, l_msg_id, f_chat_id, protect = decoded.split("_", 3)
-            except:
+            except ValueError:
                 f_msg_id, l_msg_id, f_chat_id = decoded.split("_", 2)
                 protect = "/pbatch"
         except (binascii.Error, UnicodeDecodeError, ValueError):
             await sts.delete()
             return await message.reply_text("<b>Invalid DSTORE Link ❌</b>")
 
-        async for msg in client.iter_messages(
-            int(f_chat_id),
-            min_id=int(f_msg_id)-1, 
-            max_id=int(l_msg_id)
-        ):
+        current_id = int(f_msg_id)
+        end_id = int(l_msg_id)
 
-            if msg.media:
-                media = getattr(msg, msg.media.value)
-                f_caption = getattr(msg, 'caption', '') or ''
-                if BATCH_FILE_CAPTION:
+        while current_id <= end_id:
+            try:
+                msg = await client.get_messages(int(f_chat_id), current_id)
+                if msg and msg.media:
+                    media = getattr(msg, msg.media.value)
+                    f_caption = getattr(msg, 'caption', '') or ''
+                    if BATCH_FILE_CAPTION:
+                        try:
+                            f_caption = BATCH_FILE_CAPTION.format(
+                                file_name=getattr(media, 'file_name', ''),
+                                file_size=getattr(media, 'file_size', ''),
+                                file_caption=f_caption
+                            )
+                        except Exception as e:
+                            logger.exception(e)
                     try:
-                        f_caption = BATCH_FILE_CAPTION.format(
-                            file_name=getattr(media, 'file_name', ''),
-                            file_size=getattr(media, 'file_size', ''),
-                            file_caption=f_caption
+                        await msg.copy(
+                            message.chat.id,
+                            caption=f_caption,
+                            protect_content=True if protect == "/pbatch" else False
+                        )
+                    except FloodWait as e:
+                        await asyncio.sleep(e.x)
+                        await msg.copy(
+                            message.chat.id,
+                            caption=f_caption,
+                            protect_content=True if protect == "/pbatch" else False
                         )
                     except Exception as e:
                         logger.exception(e)
-                try:
-                    await msg.copy(message.chat.id, caption=f_caption, protect_content=True if protect == "/pbatch" else False)
-                except FloodWait as e:
-                    await asyncio.sleep(e.x)
-                    await msg.copy(message.chat.id, caption=f_caption, protect_content=True if protect == "/pbatch" else False)
-                except Exception as e:
-                    logger.exception(e)
-            await asyncio.sleep(1)
+                await asyncio.sleep(1)
+            except Exception as e:
+                logger.warning(f"Failed to fetch {current_id}: {e}")
+            current_id += 1
+
         try:
             await sts.delete()
         except MessageNotModified:
@@ -126,8 +130,8 @@ async def start(client, message):
         return
 
     if data.startswith("BATCH-"):
-        # Handling BATCH links
-        sts = await message.reply("<b>Please wait...</b>")
+        # 🛠 BATCH Handling
+        sts = await message.reply("<b>Please wait while processing batch...</b>")
         file_id = data.split("-", 1)[1]
         msgs = BATCH_FILES.get(file_id)
         if not msgs:
@@ -135,9 +139,9 @@ async def start(client, message):
             try:
                 with open(file) as file_data:
                     msgs = json.loads(file_data.read())
-            except:
-                await sts.edit("Fᴀɪʟᴇᴅ")
-                return await client.send_message(LOG_CHANNEL, "Uɴᴀʙʟᴇ Tᴏ Oᴘᴇɴ Fɪʟᴇ.")
+            except Exception:
+                await sts.edit("❌ Failed to load batch.")
+                return await client.send_message(LOG_CHANNEL, "Unable to open batch file.")
             os.remove(file)
             BATCH_FILES[file_id] = msgs
 
@@ -172,7 +176,6 @@ async def start(client, message):
                 )
             except Exception as e:
                 logger.exception(e)
-                continue
             await asyncio.sleep(1)
 
         try:
@@ -181,7 +184,7 @@ async def start(client, message):
             pass
         return
 
-    # Normal Single File Handling
+    # 🛠 Normal Single File Link Handling
     try:
         pre, file_id = data.split("_", 1)
     except ValueError:
@@ -211,7 +214,7 @@ async def start(client, message):
             f_caption = CUSTOM_FILE_CAPTION.format(
                 file_name=title or '',
                 file_size=size or '',
-                file_caption=f_caption or ''
+                file_caption=f_caption
             )
         except Exception as e:
             logger.exception(e)
@@ -223,7 +226,7 @@ async def start(client, message):
             [InlineKeyboardButton("⭐️ Bᴜʏ Pʀᴇᴍɪᴜᴍ ⭐️", url=UPDATES)]
         ]
         return await message.reply_text(
-            text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!</b>",
+            text="<b>You are not verified!</b>",
             reply_markup=InlineKeyboardMarkup(btn),
             protect_content=True if PROTECT_CONTENT else False
         )
