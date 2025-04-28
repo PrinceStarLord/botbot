@@ -21,69 +21,69 @@ BATCH_FILES = {}
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        buttons = buttons = [[
-                            InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
-                       ]]
+        buttons = [[
+            InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_text(
-            # photo=random.choice(PICS),
             text=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
-        await asyncio.sleep(2) # 😢 https://github.com/EvamariaTG/EvaMaria/blob/master/plugins/p_ttishow.py#L17 😬 wait a bit, before checking.
+        await asyncio.sleep(2)
         if not await db.get_chat(message.chat.id):
-            total=await client.get_chat_members_count(message.chat.id)
-            await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))       
+            total = await client.get_chat_members_count(message.chat.id)
+            await client.send_message(LOG_CHANNEL, script.LOG_TEXT_G.format(message.chat.title, message.chat.id, total, "Unknown"))
             await db.add_chat(message.chat.id, message.chat.title)
-        return 
+        return
+
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT_P.format(message.from_user.id, message.from_user.mention))
+
     if len(message.command) != 2:
         buttons = [[
-                    InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
-                ]]
+            InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_text(
-            # photo=random.choice(PICS),
             text=script.START_TXT.format(message.from_user.mention, temp.U_NAME, temp.B_NAME),
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )
         return
+
     if AUTH_CHANNEL and not await is_subscribed(client, message):
         try:
             invite_link = await client.create_chat_invite_link(int(AUTH_CHANNEL))
         except ChatAdminRequired:
             logger.error("Mᴀᴋᴇ sᴜʀᴇ Bᴏᴛ ɪs ᴀᴅᴍɪɴ ɪɴ Fᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ")
             return
+
         btn = [
-            [
-                InlineKeyboardButton(
-                    "❆ Jᴏɪɴ Oᴜʀ Bᴀᴄᴋ-Uᴘ Cʜᴀɴɴᴇʟ ❆", url=invite_link.invite_link
-                )
-            ]
+            [InlineKeyboardButton("❆ Jᴏɪɴ Oᴜʀ Bᴀᴄᴋ-Uᴘ Cʜᴀɴɴᴇʟ ❆", url=invite_link.invite_link)]
         ]
 
         if message.command[1] != "subscribe":
             try:
                 kk, file_id = message.command[1].split("_", 1)
-                pre = 'checksubp' if kk == 'filep' else 'checksub' 
+                pre = 'checksubp' if kk == 'filep' else 'checksub'
                 btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ", callback_data=f"{pre}#{file_id}")])
             except (IndexError, ValueError):
                 btn.append([InlineKeyboardButton("↻ Tʀʏ Aɢᴀɪɴ", url=f"https://t.me/{temp.U_NAME}?start={message.command[1]}")])
+
         await client.send_message(
             chat_id=message.from_user.id,
-            text="**Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ɪɴ ᴏᴜʀ Bᴀᴄᴋ-ᴜᴘ ᴄʜᴀɴɴᴇʟ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ sᴏ ʏᴏᴜ ᴅᴏɴ'ᴛ ɢᴇᴛ ᴛʜᴇ ᴍᴏᴠɪᴇ ғɪʟᴇ...\n\nIғ ʏᴏᴜ ᴡᴀɴᴛ ᴛʜᴇ ᴍᴏᴠɪᴇ ғɪʟᴇ, ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ '❆ Jᴏɪɴ Oᴜʀ Bᴀᴄᴋ-Uᴘ Cʜᴀɴɴᴇʟ ❆' ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴀɴᴅ ᴊᴏɪɴ ᴏᴜʀ ʙᴀᴄᴋ-ᴜᴘ ᴄʜᴀɴɴᴇʟ, ᴛʜᴇɴ ᴄʟɪᴄᴋ ᴏɴ ᴛʜᴇ '↻ Tʀʏ Aɢᴀɪɴ' ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ...\n\nTʜᴇɴ ʏᴏᴜ ᴡɪʟʟ ɢᴇᴛ ᴛʜᴇ ᴍᴏᴠɪᴇ ғɪʟᴇs...**",
+            text="**Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ɪɴ ᴏᴜʀ Bᴀᴄᴋ-ᴜᴘ ᴄʜᴀɴɴᴇʟ. Pʟᴇᴀsᴇ ᴊᴏɪɴ ғɪʀsᴛ!**",
             reply_markup=InlineKeyboardMarkup(btn),
             parse_mode=enums.ParseMode.MARKDOWN
-            )
+        )
         return
+
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
         buttons = [[
-                    InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
-                  ]]
+            InlineKeyboardButton('ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ', url=UPDATES)
+        ]]
         reply_markup = InlineKeyboardMarkup(buttons)
         await message.reply_photo(
             photo=random.choice(PICS),
@@ -92,21 +92,24 @@ async def start(client, message):
             parse_mode=enums.ParseMode.HTML
         )
         return
+
     data = message.command[1]
+
     try:
         pre, file_id = data.split('_', 1)
-    except:
+    except ValueError:
         file_id = data
         pre = ""
+
     if data.split("-", 1)[0] == "BATCH":
         sts = await message.reply("<b>Pʟᴇᴀsᴇ ᴡᴀɪᴛ...</b>")
         file_id = data.split("-", 1)[1]
         msgs = BATCH_FILES.get(file_id)
         if not msgs:
             file = await client.download_media(file_id)
-            try: 
+            try:
                 with open(file) as file_data:
-                    msgs=json.loads(file_data.read())
+                    msgs = json.loads(file_data.read())
             except:
                 await sts.edit("Fᴀɪʟᴇᴅ")
                 return await client.send_message(LOG_CHANNEL, "Uɴᴀʙʟᴇ Tᴏ Oᴘᴇɴ Fɪʟᴇ.")
@@ -114,14 +117,18 @@ async def start(client, message):
             BATCH_FILES[file_id] = msgs
         for msg in msgs:
             title = msg.get("title")
-            size=get_size(int(msg.get("size", 0)))
-            f_caption=msg.get("caption", "")
+            size = get_size(int(msg.get("size", 0)))
+            f_caption = msg.get("caption", "")
             if BATCH_FILE_CAPTION:
                 try:
-                    f_caption=BATCH_FILE_CAPTION.format(file_name= '' if title is None else title, file_size='' if size is None else size, file_caption='' if f_caption is None else f_caption)
+                    f_caption = BATCH_FILE_CAPTION.format(
+                        file_name=title or '',
+                        file_size=size or '',
+                        file_caption=f_caption or ''
+                    )
                 except Exception as e:
                     logger.exception(e)
-                    f_caption=f_caption
+                    f_caption = f_caption
             if f_caption is None:
                 f_caption = f"{title}"
             try:
@@ -143,13 +150,14 @@ async def start(client, message):
             except Exception as e:
                 logger.warning(e, exc_info=True)
                 continue
-            await asyncio.sleep(1) 
+            await asyncio.sleep(1)
         await sts.delete()
         return
+
     elif data.split("-", 1)[0] == "DSTORE":
         sts = await message.reply("<b>Pʟᴇᴀsᴇ ᴡᴀɪᴛ...</b>")
         b_string = data.split("-", 1)[1]
-        decoded = (base64.urlsafe_b64decode(b_string + "=" * (-len(b_string) % 4))).decode("ascii")
+        decoded = (base64.urlsafe_b64decode(b_string + "=" * (-len(b_string) % 4))).decode("utf-8")
         try:
             f_msg_id, l_msg_id, f_chat_id, protect = decoded.split("_", 3)
         except:
@@ -161,12 +169,15 @@ async def start(client, message):
                 media = getattr(msg, msg.media.value)
                 if BATCH_FILE_CAPTION:
                     try:
-                        f_caption=BATCH_FILE_CAPTION.format(file_name=getattr(media, 'file_name', ''), file_size=getattr(media, 'file_size', ''), file_caption=getattr(msg, 'caption', ''))
+                        f_caption = BATCH_FILE_CAPTION.format(
+                            file_name=getattr(media, 'file_name', ''),
+                            file_size=getattr(media, 'file_size', ''),
+                            file_caption=getattr(msg, 'caption', '')
+                        )
                     except Exception as e:
                         logger.exception(e)
                         f_caption = getattr(msg, 'caption', '')
                 else:
-                    media = getattr(msg, msg.media.value)
                     file_name = getattr(media, 'file_name', '')
                     f_caption = getattr(msg, 'caption', file_name)
                 try:
@@ -188,50 +199,13 @@ async def start(client, message):
                 except Exception as e:
                     logger.exception(e)
                     continue
-            await asyncio.sleep(1) 
+            await asyncio.sleep(1)
         return await sts.delete()
 
-    elif data.split("-", 1)[0] == "verify":
-        userid = data.split("-", 2)[1]
-        token = data.split("-", 3)[2]
-        fileid = data.split("-", 3)[3]
-        if str(message.from_user.id) != str(userid):
-            return await message.reply_text(
-                text="<b>Iɴᴠᴀʟɪᴅ ʟɪɴᴋ ᴏʀ Exᴘɪʀᴇᴅ ʟɪɴᴋ !</b>",
-                protect_content=True if PROTECT_CONTENT else False
-            )
-        is_valid = await check_token(client, userid, token)
-        if is_valid == True:
-            if fileid == "send_all":
-                btn = [[
-                    InlineKeyboardButton("Gᴇᴛ Fɪʟᴇ", callback_data=f"checksub#send_all")
-                ]]
-                await verify_user(client, userid, token)
-                await message.reply_text(
-                    text=f"<b>Hᴇʏ {message.from_user.mention}, Yᴏᴜ ᴀʀᴇ sᴜᴄᴄᴇssғᴜʟʟʏ ᴠᴇʀɪғɪᴇᴅ !\nNᴏᴡ ʏᴏᴜ ʜᴀᴠᴇ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ғᴏʀ ᴀʟʟ ᴍᴏᴠɪᴇs ᴛɪʟʟ ᴛʜᴇ ɴᴇxᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ ᴡʜɪᴄʜ ɪs ᴀғᴛᴇʀ 12 ʜᴏᴜʀs ғʀᴏᴍ ɴᴏᴡ.</b>",
-                    protect_content=True if PROTECT_CONTENT else False,
-                    reply_markup=InlineKeyboardMarkup(btn)
-                )
-                return
-            btn = [[
-                InlineKeyboardButton("Gᴇᴛ Fɪʟᴇ", url=f"https://telegram.me/{temp.U_NAME}?start=files_{fileid}")
-            ]]
-            await message.reply_text(
-                text=f"<b>Hᴇʏ {message.from_user.mention}, Yᴏᴜ ᴀʀᴇ sᴜᴄᴄᴇssғᴜʟʟʏ ᴠᴇʀɪғɪᴇᴅ !\nNᴏᴡ ʏᴏᴜ ʜᴀᴠᴇ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss ғᴏʀ ᴀʟʟ ᴍᴏᴠɪᴇs ᴛɪʟʟ ᴛʜᴇ ɴᴇxᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ ᴡʜɪᴄʜ ɪs ᴀғᴛᴇʀ 12 ʜᴏᴜʀs ғʀᴏᴍ ɴᴏᴡ.</b>",
-                protect_content=True if PROTECT_CONTENT else False,
-                reply_markup=InlineKeyboardMarkup(btn)
-            )
-            await verify_user(client, userid, token)
-            return
-        else:
-            return await message.reply_text(
-                text="<b>Iɴᴠᴀʟɪᴅ ʟɪɴᴋ ᴏʀ Exᴘɪʀᴇᴅ ʟɪɴᴋ !</b>",
-                protect_content=True if PROTECT_CONTENT else False
-            )
-
-    files_ = await get_file_details(file_id)           
+    # Fallback for normal file download
+    files_ = await get_file_details(file_id)
     if not files_:
-        pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("ascii")).split("_", 1)
+        pre, file_id = ((base64.urlsafe_b64decode(data + "=" * (-len(data) % 4))).decode("utf-8")).split("_", 1)
         try:
             if IS_VERIFY and not await check_verification(client, message.from_user.id):
                 btn = [[
@@ -241,7 +215,7 @@ async def start(client, message):
                     InlineKeyboardButton("⭐️ Bᴜʏ Pʀᴇᴍɪᴜᴍ ⭐️", url=UPDATES)
                 ]]
                 await message.reply_text(
-                    text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!\nKɪɴᴅʟʏ ᴠᴇʀɪғʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ Sᴏ ᴛʜᴀᴛ ʏᴏᴜ ᴄᴀɴ ɢᴇᴛ ᴀᴄᴄᴇss ᴛᴏ ᴜɴʟɪᴍɪᴛᴇᴅ ᴍᴏᴠɪᴇs ᴜɴᴛɪʟ 12 ʜᴏᴜʀs ғʀᴏᴍ ɴᴏᴡ !\n\nआप verified नहीं हैं ! \nकृपया जारी रखने के लिए verify करें ताकि आप अब से 16 घंटे तक unlimited फिल्मों  प्राप्त कर सकें</b>",
+                    text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!</b>",
                     protect_content=True if PROTECT_CONTENT else False,
                     reply_markup=InlineKeyboardMarkup(btn)
                 )
@@ -254,44 +228,54 @@ async def start(client, message):
             filetype = msg.media
             file = getattr(msg, filetype.value)
             title = file.file_name
-            size=get_size(file.file_size)
+            size = get_size(file.file_size)
             f_caption = f"<code>{title}</code>"
             if CUSTOM_FILE_CAPTION:
                 try:
-                    f_caption=CUSTOM_FILE_CAPTION.format(file_name= '' if title is None else title, file_size='' if size is None else size, file_caption='')
+                    f_caption = CUSTOM_FILE_CAPTION.format(
+                        file_name=title or '',
+                        file_size=size or '',
+                        file_caption=''
+                    )
                 except:
                     return
             await msg.edit_caption(f_caption)
             return
         except:
             pass
-        # return await message.reply('Nᴏ sᴜᴄʜ ғɪʟᴇ ᴇxɪsᴛ.')
         return
+
     files = files_[0]
     title = files.file_name
-    size=get_size(files.file_size)
-    f_caption=files.caption
+    size = get_size(files.file_size)
+    f_caption = files.caption
     if CUSTOM_FILE_CAPTION:
         try:
-            f_caption=CUSTOM_FILE_CAPTION.format(file_name= '' if title is None else title, file_size='' if size is None else size, file_caption='' if f_caption is None else f_caption)
+            f_caption = CUSTOM_FILE_CAPTION.format(
+                file_name=title or '',
+                file_size=size or '',
+                file_caption=f_caption or ''
+            )
         except Exception as e:
             logger.exception(e)
-            f_caption=f_caption
+            f_caption = f_caption
     if f_caption is None:
         f_caption = f"{files.file_name}"
+
     if IS_VERIFY and not await check_verification(client, message.from_user.id):
         btn = [[
             InlineKeyboardButton("Vᴇʀɪғʏ", url=await get_token(client, message.from_user.id, f"https://telegram.me/{temp.U_NAME}?start=", file_id)),
             InlineKeyboardButton("Hᴏᴡ Tᴏ Vᴇʀɪғʏ", url=HOW_TO_VERIFY)
         ],[
             InlineKeyboardButton("⭐️ Bᴜʏ Pʀᴇᴍɪᴜᴍ ⭐️", url=UPDATES)
-          ]]
+        ]]
         await message.reply_text(
-            text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!\nKɪɴᴅʟʏ ᴠᴇʀɪғʏ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ Sᴏ ᴛʜᴀᴛ ʏᴏᴜ ᴄᴀɴ ɢᴇᴛ ᴀᴄᴄᴇss ᴛᴏ ᴜɴʟɪᴍɪᴛᴇᴅ ᴍᴏᴠɪᴇs ᴜɴᴛɪʟ 12 ʜᴏᴜʀs ғʀᴏᴍ ɴᴏᴡ !\n\nआप verified नहीं हैं ! \nकृपया जारी रखने के लिए verify करें ताकि आप अब से 16 घंटे तक unlimited फिल्मों  प्राप्त कर सकें</b>",
+            text="<b>Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ!</b>",
             protect_content=True if PROTECT_CONTENT else False,
             reply_markup=InlineKeyboardMarkup(btn)
         )
         return
+
     await client.send_cached_media(
         chat_id=message.from_user.id,
         file_id=file_id,
